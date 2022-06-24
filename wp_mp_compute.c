@@ -106,8 +106,6 @@ void sep(double ra1,double dec1,double z1,double ra2,double dec2,double z2,doubl
 	*PI=pi;
 }
 
-
-
 void DD_count(double *ra1,double *dec1,double *z1, double *w1,int n1,double **count_array_DD)
 {
 	double rp,pi;
