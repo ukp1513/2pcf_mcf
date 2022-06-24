@@ -1,8 +1,7 @@
 // This code computes projected 2pt and marked correlation functions 
 // of real data and bootstrap/jackknife samples.
-// This code uses the weights of random galaxies too.
-// Details are given in the README file.
-// LAST UPDATE : 24 March 2022.
+// Details in README.
+// LAST UPDATE : 24 June 2022.
 // -------------- UNNIKRISHNAN SURESHKUMAR -------------------//
 // ----------------- ukp1513@gmail.com -----------------------//
 
@@ -15,17 +14,30 @@
 #include<omp.h>
 #include<string.h>
 
+/*------------ SET PARAMETERS --------------*/
+
 #define non_prop 4				// Number of columns in real file that are not to be used as marks 
-								// These columns should be the first columns
-								
+								// These columns should be the first columns				
 #define boot_meth 2				// 1: individual; 2: blockwise
-
-#define n_boots 0							// number of bootstrap samples
+#define n_boots 0				// number of bootstrap samples
 #define n_jacks 9				// Number of jackknife samples 
-#define n_shuffles 100					// number of shuffled copies of marks 
+#define n_shuffles 100			// number of shuffled copies of marks 
+#define bin_rp 16				// number of bins
+#define bin_pi 40				// here goes the pmax
 
-#define bin_rp 16							// number of bins
-#define bin_pi 40							// here goes the pmax
+double rp_init=0.01;			// centre of first (smallest) bin in rp
+double pi_init=0.5;				// centre of first (smallest) bin in pi
+double dlrp=0.27;				// binwidth in log scale
+double dpi=1.0;					// binwidth in pi (linear scale)
+
+/*-------------------------------------------*/
+
+int n_marks;
+double rp_bins[bin_rp],pi_bins[bin_pi];
+double **RR;
+double rp_wp_all[bin_rp][n_copies+2];
+double rp_lowcut,rp_highcut,pi_highcut;
+FILE *f_summary;
 
 #if n_boots > 0
 #define n_copies n_boots
@@ -38,22 +50,6 @@
 #if n_jacks == 0 && n_boots == 0
 #define n_copies 0
 #endif
-
-int n_marks;
-
-double rp_init=0.01;							// first bin
-double pi_init=0.5;
-double dlrp=0.27;							// binwidth in log scale
-double dpi=1.0;
-
-double rp_bins[bin_rp],pi_bins[bin_pi];
-double **RR;
-
-double rp_wp_all[bin_rp][n_copies+2];
-
-double rp_lowcut,rp_highcut,pi_highcut;
-
-FILE *f_summary;
 
 void shuffle(double *array, size_t n)	// to scramble the array having marks
 {								
