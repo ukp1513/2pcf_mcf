@@ -32,13 +32,6 @@ double dpi=1.0;					// binwidth in pi (linear scale)
 
 /*-------------------------------------------*/
 
-int n_marks;
-double rp_bins[bin_rp],pi_bins[bin_pi];
-double **RR;
-double rp_wp_all[bin_rp][n_copies+2];
-double rp_lowcut,rp_highcut,pi_highcut;
-FILE *f_summary;
-
 #if n_boots > 0
 #define n_copies n_boots
 #endif
@@ -50,6 +43,13 @@ FILE *f_summary;
 #if n_jacks == 0 && n_boots == 0
 #define n_copies 0
 #endif
+
+int n_marks;
+double rp_bins[bin_rp],pi_bins[bin_pi];
+double **RR;
+double rp_wp_all[bin_rp][n_copies+2];
+double rp_lowcut,rp_highcut,pi_highcut;
+FILE *f_summary;
 
 void shuffle(double *array, size_t n)	// to scramble the array having marks
 {								
