@@ -22,12 +22,12 @@
 #define n_boots 0				// number of bootstrap samples
 #define n_jacks 9				// Number of jackknife samples 
 #define n_shuffles 100			// number of shuffled copies of marks 
-#define bin_rp 16				// number of bins
+#define bin_rp 17				// number of bins
 #define bin_pi 40				// here goes the pmax
 
-double rp_init=0.01;			// centre of first (smallest) bin in rp
+double rp_init=0.001;			// centre of first (smallest) bin in rp
 double pi_init=0.5;				// centre of first (smallest) bin in pi
-double dlrp=0.27;				// binwidth in log scale
+double dlrp=0.30;				// binwidth in log scale
 double dpi=1.0;					// binwidth in pi (linear scale)
 
 /*-------------------------------------------*/
@@ -1059,11 +1059,6 @@ int main(void)
 		
 		for(int i=0;i<n_d;i++)	prop_d[i]=prop_2d_mark[i][mark_nr];
 		
-		// making all marks positive if negative (in case of absolute magnitude)
-		if(prop_d[0] < 0)	{
-			for(int i=0;i<n_d;i++)	prop_d[i]=-1*prop_d[i]; 
-		}
-
 		// ranking the properties
 		rankify(prop_d,n_d,mark_d); 
 		
@@ -1207,11 +1202,6 @@ int main(void)
 				
 				// extracting marks from prop_2d array
 				for(int j=0;j<n_d_jk;j++)	prop_d_jk[j]=prop_2d_jk[j][mark_nr];
-				
-				// making all marks positive if negative (in case of absolute magnitude)
-				if(prop_d_jk[0] < 0)	{
-					for(int i=0;i<n_d_jk;i++)	prop_d_jk[i]=-1*prop_d_jk[i];
-				}
 				
 				// ranking the properties
 				rankify(prop_d_jk,n_d_jk,mark_d_jk);
@@ -1397,7 +1387,6 @@ int main(void)
 	fclose(f_summary);
 	return 0;
 }	
-
 
 
 
