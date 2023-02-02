@@ -21,6 +21,7 @@ The formats of all files are given below.
 3. Random data file : _random\_galaxies_
 4. If blockwise bootstrap method, directory _bootstrap\_data_ with real and random BS files
 5. If jackknife method, directory _jackknife\_data_ with real and random JK files
+6. List of properties: _propertylist.txt_ . This file should have the headers of property columns in the real data file.
 
 #### FILE COLUMNS (seperated by tabspace, all input files should have the header):
 
