@@ -942,7 +942,7 @@ int main(void)
 
 	
 	// ******** READING THE REAL GALAXIES' DATA FILE *************************
-	
+
 	char ch;											 	
 	// ignoring the first header line
 	do											
@@ -1387,7 +1387,6 @@ int main(void)
 	fclose(f_summary);
 	return 0;
 }	
-
 
 
 
