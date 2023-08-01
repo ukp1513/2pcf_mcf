@@ -61,6 +61,10 @@ After the cleaning, run `gcc -o fit_code fit_code.c -lm && ./fit_code` to fit th
   
 For information about correlation functions, please read the Chapter 3 of my PhD thesis: https://doi.org/10.5281/zenodo.7572218.
 
+### Sample data to test
+
+In this folder, I provide a sample data - 'real_galaxies' and 'random_galaxies'. Running the code on this sample data should give the results as in Fig. 3.11 (2pCF) and Fig. 3.18 (MCF) of my PhD thesis.
+
 For various applications of 2pCF and MCF, please see the papers:
 
 Sureshkumar et al. 2021: Galaxy and Mass Assembly (GAMA): Tracing galaxy environment using the marked correlation function, A&A 653, A35 (arXiv:2102.04177).
