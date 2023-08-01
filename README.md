@@ -63,7 +63,7 @@ For information about correlation functions, please read the Chapter 3 of my PhD
 
 ### Sample data to test
 
-In this folder, I provide a sample data - 'real_galaxies' and 'random_galaxies'. Running the code on this sample data should give the results as in Fig. 3.11 (2pCF) and Fig. 3.18 (MCF) of my PhD thesis.
+In this folder, I provide a sample data - 'real_galaxies' and 'random_galaxies'. Running the code on this sample data should give the results as in Fig. 3.11 (2pCF) and Fig. 3.18 (MCF) of my PhD thesis. See Sect. 3.2 of the thesis to know more about how this dataset was generated from the GAMA survey.
 
 For various applications of 2pCF and MCF, please see the papers:
 
