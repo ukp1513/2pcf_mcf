@@ -1,7 +1,7 @@
 // This code computes projected 2pt and marked correlation functions 
 // of real data and bootstrap/jackknife samples.
 // Details in README.
-// LAST UPDATE : 24 June 2022.
+// LAST UPDATE : 01 August 2023.
 // -------------- UNNIKRISHNAN SURESHKUMAR -------------------//
 // ----------------- ukp1513@gmail.com -----------------------//
 
@@ -22,12 +22,12 @@
 #define n_boots 0				// number of bootstrap samples
 #define n_jacks 9				// Number of jackknife samples 
 #define n_shuffles 100			// number of shuffled copies of marks 
-#define bin_rp 17				// number of bins
+#define bin_rp 16				// number of bins
 #define bin_pi 40				// here goes the pmax
 
-double rp_init=0.001;			// centre of first (smallest) bin in rp
+double rp_init=0.15;			// centre of first (smallest) bin in rp
 double pi_init=0.5;				// centre of first (smallest) bin in pi
-double dlrp=0.30;				// binwidth in log scale
+double dlrp=0.25;				// binwidth in log scale
 double dpi=1.0;					// binwidth in pi (linear scale)
 
 /*-------------------------------------------*/
@@ -1387,7 +1387,6 @@ int main(void)
 	fclose(f_summary);
 	return 0;
 }	
-
 
 
 
