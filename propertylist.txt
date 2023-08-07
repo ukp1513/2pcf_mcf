@@ -1,5 +1,6 @@
-Mu
-Mg
-Mr
-MK
+Lu
+Lg
+Lr
+LJ
+LK
 log_smass
