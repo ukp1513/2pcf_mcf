@@ -1,7 +1,7 @@
 // This code computes projected 2pt and marked correlation functions 
-// of real data and bootstrap/jackknife samples.
+// of real data and jackknife samples.
 // Details in README.
-// LAST UPDATE : 01 August 2023.
+// LAST UPDATE : 11 Sep 2023.
 // -------------- UNNIKRISHNAN SURESHKUMAR -------------------//
 // ----------------- ukp1513@gmail.com -----------------------//
 
@@ -18,31 +18,22 @@
 
 #define non_prop 4				// Number of columns in real file that are not to be used as marks 
 								// These columns should be the first columns				
-#define boot_meth 2				// 1: individual; 2: blockwise
-#define n_boots 0				// number of bootstrap samples
 #define n_jacks 9				// Number of jackknife samples 
 #define n_shuffles 100			// number of shuffled copies of marks 
-#define bin_rp 16				// number of bins
+#define bin_rp 17				// number of bins
 #define bin_pi 40				// here goes the pmax
 
-double rp_init=0.15;			// centre of first (smallest) bin in rp
+double rp_init=0.001;			// centre of first (smallest) bin in rp
 double pi_init=0.5;				// centre of first (smallest) bin in pi
-double dlrp=0.25;				// binwidth in log scale
+double dlrp=0.30;				// binwidth in log scale
 double dpi=1.0;					// binwidth in pi (linear scale)
 
 /*-------------------------------------------*/
-
-#if n_boots > 0
-#define n_copies n_boots
-#endif
 
 #if n_jacks > 0
 #define n_copies n_jacks
 #endif
 
-#if n_jacks == 0 && n_boots == 0
-#define n_copies 0
-#endif
 
 int n_marks;
 double rp_bins[bin_rp],pi_bins[bin_pi];
@@ -102,68 +93,10 @@ void sep(double ra1,double dec1,double z1,double ra2,double dec2,double z2,doubl
 	*PI=pi;
 }
 
-void DD_count(double *ra1,double *dec1,double *z1, double *w1,int n1,double **count_array_DD)
+ void DD_WW_count(double *ra1,double *dec1,double *z1,double *w1,double **m1,int n1,double **count_array_DD,double ***count_array_WW)
 {
 	double rp,pi;
-	for(int j=0;j<bin_rp;j++)	{
-		for(int k=0;k<bin_pi;k++)	{
-			count_array_DD[j][k]=0;
-		}
-	}
-	for(int l=0;l<n1;l++)	{
-		for(int m=0;m<n1;m++)	{
-			if(l<m)	{
-				sep(ra1[l],dec1[l],z1[l],ra1[m],dec1[m],z1[m],&rp,&pi);
-				if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
-				if(rp != 0.0)	{
-					rp=log10(rp);
-					for(int j=0;j<bin_rp;j++)	{
-						if(rp < (rp_bins[j]+dlrp*0.5) && rp > (rp_bins[j]-dlrp*0.5))		{
-							for(int k=0;k<bin_pi;k++)	{
-								if(pi < (pi_bins[k]+dpi*0.5) && pi > (pi_bins[k]-dpi*0.5))		{
-									count_array_DD[j][k]+=w1[l]*w1[m];							
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-void DR_count(double *ra1,double *dec1,double *z1,double *w1,int n1,double *ra2,double *dec2,double *z2, double *w2,int n2,double **count_array_DR)
-{
-	double rp,pi;
-	for(int j=0;j<bin_rp;j++)	{
-		for(int k=0;k<bin_pi;k++)	{
-			count_array_DR[j][k]=0;
-		}
-	}
-
-	for(int l=0;l<n1;l++)	{
-		for(int m=0;m<n2;m++)	{
-			sep(ra1[l],dec1[l],z1[l],ra2[m],dec2[m],z2[m],&rp,&pi);
-			if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
-			rp=log10(rp);
-			for(int j=0;j<bin_rp;j++)	{
-				if(rp < (rp_bins[j]+dlrp*0.5) && rp > (rp_bins[j]-dlrp*0.5))	{
-					for(int k=0;k<bin_pi;k++)	{
-						 if(pi < (pi_bins[k]+dpi*0.5) && pi > (pi_bins[k]-dpi*0.5))	{
-							count_array_DR[j][k]+=w1[l]*w2[m];					
-						}
-					}
-				}
-			}
-		}	
-	}	
-}
-
-
-
-void DD_WW_count(double *ra1,double *dec1,double *z1,double *w1,double **m1,int n1,double **count_array_DD,double ***count_array_WW)
-{
-	double rp,pi;
+	int bin_of_rp, bin_of_pi;
 	for(int j=0;j<bin_rp;j++)	{
 		for(int k=0;k<bin_pi;k++)	{
 			count_array_DD[j][k]=0;
@@ -171,397 +104,140 @@ void DD_WW_count(double *ra1,double *dec1,double *z1,double *w1,double **m1,int 
 				count_array_WW[j][k][l]=0;
 		}
 	}
-	for(int l=0;l<n1;l++)	{
-    for(int m=0;m<n1;m++)	{
-			if(l<m)	{
-				sep(ra1[l],dec1[l],z1[l],ra1[m],dec1[m],z1[m],&rp,&pi);
-				if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
-				if(rp != 0.0)	{
-					rp=log10(rp);
-					for(int j=0;j<bin_rp;j++)	{
-						if(rp < (rp_bins[j]+dlrp*0.5) && rp > (rp_bins[j]-dlrp*0.5))		{
-							for(int k=0;k<bin_pi;k++)	{
-								if(pi < (pi_bins[k]+dpi*0.5) && pi > (pi_bins[k]-dpi*0.5))		{
-									count_array_DD[j][k]+=w1[l]*w1[m];							
-									for(int o=0;o<n_shuffles+1;o++)	
-										count_array_WW[j][k][o]+=w1[l]*w1[m]*m1[l][o]*m1[m][o];
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-void DD_WW_count_JK(double *ra1,double *dec1,double *z1,double *w1,double **m1,int n1,double **count_array_DD,double ***count_array_WW)
-{
-	double rp,pi;
-	for(int j=0;j<bin_rp;j++)	{
-		for(int k=0;k<bin_pi;k++)	{
-			count_array_DD[j][k]=0;
-			for(int l=0;l<n_marks;l++)
-				count_array_WW[j][k][l]=0;
-		}
-	}
-	for(int l=0;l<n1;l++)	{
-		for(int m=0;m<n1;m++)	{
-			if(l<m)	{
-				sep(ra1[l],dec1[l],z1[l],ra1[m],dec1[m],z1[m],&rp,&pi);
-				if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
-				if(rp != 0.0)	{
-					rp=log10(rp);
-					for(int j=0;j<bin_rp;j++)	{
-						if(rp < (rp_bins[j]+dlrp*0.5) && rp > (rp_bins[j]-dlrp*0.5))		{
-							for(int k=0;k<bin_pi;k++)	{
-								if(pi < (pi_bins[k]+dpi*0.5) && pi > (pi_bins[k]-dpi*0.5))		{
-									count_array_DD[j][k]+=w1[l]*w1[m];							
-									for(int o=0;o<n_marks;o++)	
-										count_array_WW[j][k][o]+=w1[l]*w1[m]*m1[l][o]*m1[m][o];
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
 	
-
-void DR_WR_count(double *ra1,double *dec1,double *z1,double *w1, double **m1,int n1,double *ra2,double *dec2,double *z2, double *w2,int n2,double **count_array_DR,double ***count_array_WR)
-{
-	double rp,pi;
-	for(int j=0;j<bin_rp;j++)	{
-		for(int k=0;k<bin_pi;k++)	{
-			count_array_DR[j][k]=0;
-			for(int l=0;l<n_shuffles+1;l++)
-				count_array_WR[j][k][l]=0;
-		}
-	}
-
-	for(int l=0;l<n1;l++)	{
-		for(int m=0;m<n2;m++)	{
-			sep(ra1[l],dec1[l],z1[l],ra2[m],dec2[m],z2[m],&rp,&pi);
-			if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
-			rp=log10(rp);
-			for(int j=0;j<bin_rp;j++)	{
-				if(rp < (rp_bins[j]+dlrp*0.5) && rp > (rp_bins[j]-dlrp*0.5))	{
-					for(int k=0;k<bin_pi;k++)	{
-						 if(pi < (pi_bins[k]+dpi*0.5) && pi > (pi_bins[k]-dpi*0.5))	{
-							count_array_DR[j][k]+=w1[l]*w2[m];					
-							for(int o=0;o<n_shuffles+1;o++)				
-								count_array_WR[j][k][o]+=(w1[l]*w2[m]*m1[l][o]);
-						}
-					}
-				}
-			}
-		}	
-	}	
-}	
-
-void DR_WR_count_JK(double *ra1,double *dec1,double *z1,double *w1, double **m1,int n1,double *ra2,double *dec2,double *z2, double *w2,int n2,double **count_array_DR,double ***count_array_WR)
-{
-	double rp,pi;
-	for(int j=0;j<bin_rp;j++)	{
-		for(int k=0;k<bin_pi;k++)	{
-			count_array_DR[j][k]=0;
-			for(int l=0;l<n_marks;l++)
-				count_array_WR[j][k][l]=0;
-		}
-	}
-
-	for(int l=0;l<n1;l++)	{
-		for(int m=0;m<n2;m++)	{
-			sep(ra1[l],dec1[l],z1[l],ra2[m],dec2[m],z2[m],&rp,&pi);
-			if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
-			rp=log10(rp);
-			for(int j=0;j<bin_rp;j++)	{
-				if(rp < (rp_bins[j]+dlrp*0.5) && rp > (rp_bins[j]-dlrp*0.5))	{
-					for(int k=0;k<bin_pi;k++)	{
-						 if(pi < (pi_bins[k]+dpi*0.5) && pi > (pi_bins[k]-dpi*0.5))	{
-							count_array_DR[j][k]+=w1[l]*w2[m];					
-							for(int o=0;o<n_marks;o++)				
-								count_array_WR[j][k][o]+=(w1[l]*w2[m]*m1[l][o]);
-						}
-					}
-				}
-			}
-		}	
-	}	
-}			
-
-void RR_count(double *ra1,double *dec1,double *z1,double *w1,int n1,double **count_array_RR)
-{
-	
-	double rp,pi;
-	for(int j=0;j<bin_rp;j++)	
-		for(int k=0;k<bin_pi;k++)	
-			count_array_RR[j][k]=0;
-
 	for(int l=0;l<n1;l++)	{
 		for(int m=0;m<n1;m++)	{
 			if(l<m)	{
 				sep(ra1[l],dec1[l],z1[l],ra1[m],dec1[m],z1[m],&rp,&pi);
 				if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
 				rp=log10(rp);
-				for(int j=0;j<bin_rp;j++)	{
-					if(rp < (rp_bins[j]+dlrp*0.5) && rp > (rp_bins[j]-dlrp*0.5))	{
-						for(int k=0;k<bin_pi;k++)	{
-							if(pi < (pi_bins[k]+dpi*0.5) && pi > (pi_bins[k]-dpi*0.5))	
-								count_array_RR[j][k]+=w1[l]*w1[m];							
-						}
-					}
-				}	
-			}
+					
+				bin_of_rp = (rp-log10(rp_lowcut))/dlrp;
+				bin_of_pi = pi/dpi;
+
+				count_array_DD[bin_of_rp][bin_of_pi]+=w1[l]*w1[m];
+				for(int o=0;o<n_shuffles+1;o++)
+					count_array_WW[bin_of_rp][bin_of_pi][o]+=w1[l]*w1[m]*m1[l][o]*m1[m][o];
+					
+			}	
+			
+		}
+	}
+}
+
+void DR_WR_count(double *ra1,double *dec1,double *z1,double *w1, double **m1,int n1,double *ra2,double *dec2,double *z2, double *w2,int n2,double **count_array_DR,double ***count_array_WR)
+{
+	double rp,pi;
+	int bin_of_rp, bin_of_pi;
+	for(int j=0;j<bin_rp;j++)	{
+		for(int k=0;k<bin_pi;k++)	{
+			count_array_DR[j][k]=0;
+			for(int l=0;l<n_shuffles+1;l++)
+				count_array_WR[j][k][l]=0;
+		}
+	}
+
+	for(int l=0;l<n1;l++)	{
+		for(int m=0;m<n2;m++)	{
+			sep(ra1[l],dec1[l],z1[l],ra2[m],dec2[m],z2[m],&rp,&pi);
+			if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
+			rp=log10(rp);
+			bin_of_rp = (rp-log10(rp_lowcut))/dlrp;
+			bin_of_pi = pi/dpi;
+			
+			count_array_DR[bin_of_rp][bin_of_pi]+=w1[l]*w2[m];
+			for(int o=0;o<n_shuffles+1;o++)				
+				count_array_WR[bin_of_rp][bin_of_pi][o]+=(w1[l]*w2[m]*m1[l][o]);
+			
+			
+			
 		}	
-	}
+	}	
 }
 
-// computeJackknife() computes CFs for all jackknife samples
-void computeJackknife(int jkNr, long int n_d_jk, double *ra_d_jk, double *dec_d_jk, double *z_d_jk, double *w_d_jk, long int n_r_jk, double *ra_r_jk, double *dec_r_jk, double *z_r_jk, double *w_r_jk)
+void RR_count(double *ra1,double *dec1,double *z1,double *w1,int n1,double **count_array_RR)
 {
-	double **DD_jk=alloc_2d(bin_rp,bin_pi);
-	double **DR_jk=alloc_2d(bin_rp,bin_pi);
-	double **RR_jk=alloc_2d(bin_rp,bin_pi);
-	double **DDn_jk=alloc_2d(bin_rp,bin_pi);
-	double **DRn_jk=alloc_2d(bin_rp,bin_pi);
-	double **RRn_jk=alloc_2d(bin_rp,bin_pi);
-	double **xi_jk=alloc_2d(bin_rp,bin_pi);
 	
-	double ndd_jk=n_d_jk*(n_d_jk-1)*0.5;
-	double nrr_jk=n_r_jk*(n_r_jk-1)*0.5;
-	double ndr_jk=n_d_jk*n_r_jk;
-
-	// ************* COMPUTING WW and WR **************************
-	
-	fprintf(stdout,"\nComputing DD for the jackknife sample %d\n", jkNr+1);
-	DD_count(ra_d_jk,dec_d_jk,z_d_jk,w_d_jk,n_d_jk,DD_jk);
-	fprintf(stdout,"\nComputing DR for the jackknife sample %d\n", jkNr+1);
-	DR_count(ra_d_jk,dec_d_jk,z_d_jk,w_d_jk,n_d_jk,ra_r_jk,dec_r_jk,z_r_jk,w_r_jk,n_r_jk,DR_jk);
-	fprintf(stdout,"\nComputing RR for the jackknife sample %d\n", jkNr+1);
-
-	char RR_jk_name[100];
-	sprintf(RR_jk_name,"biproducts/RR_jk%d.txt",jkNr+1);
-
-	FILE *f_RR_jk=fopen(RR_jk_name,"r");
-	if(!f_RR_jk)	{
-		fprintf(stdout,"\nRR_jk%d.txt not found! Computing RR and writing to RR_%d.txt\n", jkNr+1,jkNr+1);
-		RR_count(ra_r_jk,dec_r_jk,z_r_jk, w_r_jk,n_r_jk,RR_jk);
-		f_RR_jk=fopen(RR_jk_name,"w");
-		for(int i=0;i<bin_rp;i++)	{
-			for(int j=0;j<bin_pi;j++)
-				fprintf(f_RR_jk,"%lf\t",RR_jk[i][j]);
-			fprintf(f_RR_jk,"\n");
+	double rp,pi;
+	int bin_of_rp, bin_of_pi;
+	for(int j=0;j<bin_rp;j++)	
+		for(int k=0;k<bin_pi;k++)	
+			count_array_RR[j][k]=0;
+			
+	for(int l=0;l<n1;l++)	{
+		for(int m=0;m<n1;m++)	{
+		if(l<m)	{
+			sep(ra1[l],dec1[l],z1[l],ra1[m],dec1[m],z1[m],&rp,&pi);
+			if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
+			rp=log10(rp);
+			
+			bin_of_rp = (rp-log10(rp_lowcut))/dlrp;
+			bin_of_pi = pi/dpi;
+			
+			count_array_RR[bin_of_rp][bin_of_pi]+=w1[l]*w1[m];
+			}
 		}
-		fclose(f_RR_jk);
-	}
-	else	{
-		fprintf(stdout,"\nReading RR from RR_jk%d.txt \n",jkNr+1);
-		for(int i=0;i<bin_rp;i++)	
-			for(int j=0;j<bin_pi;j++)
-				fscanf(f_RR_jk,"%lf",&RR_jk[i][j]);
-		fclose(f_RR_jk);
-	}
+	}	
+}
 
-	// ******** COMPUTING XI(RP,PI) AND W(RP,PI) **********************************
-
+void DD_WW_count_JK(double *ra1,double *dec1,double *z1,double *w1,double **m1,int n1,double **count_array_DD,double ***count_array_WW)
+{
+	double rp,pi;
+	int bin_of_rp, bin_of_pi;
 	for(int j=0;j<bin_rp;j++)	{
 		for(int k=0;k<bin_pi;k++)	{
-			DDn_jk[j][k] = DD_jk[j][k]/ndd_jk;
-			DRn_jk[j][k] = DR_jk[j][k]/ndr_jk;
-			RRn_jk[j][k] = RR_jk[j][k]/nrr_jk;
-				
-			if(RRn_jk==0)	xi_jk[j][k]=0;
-			
-			else	xi_jk[j][k]= (DDn_jk[j][k]-(2*DRn_jk[j][k])+RRn_jk[j][k])/RRn_jk[j][k];
-			
+			count_array_DD[j][k]=0;
+			for(int l=0;l<n_marks;l++)
+				count_array_WW[j][k][l]=0;
 		}
 	}
-	
-	// ******** COMPUTING PROJECTED CF BY INTEGRATION *************************
-
-	double wp_jk[bin_rp];
-	for(int j=0;j<bin_rp;j++)	{
-		wp_jk[j]=0;
-		for(int k=0;k<bin_pi;k++)	wp_jk[j]+=(dpi*xi_jk[j][k]);
-		wp_jk[j]*=2;
+	for(int l=0;l<n1;l++)	{
+		for(int m=0;m<n1;m++)	{
+			if(l<m)	{
+				sep(ra1[l],dec1[l],z1[l],ra1[m],dec1[m],z1[m],&rp,&pi);
+				if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
+				rp=log10(rp);
+				
+				bin_of_rp = (rp-log10(rp_lowcut))/dlrp;
+				bin_of_pi = pi/dpi;
+				
+				count_array_DD[bin_of_rp][bin_of_pi]+=w1[l]*w1[m];
+				for(int o=0;o<n_marks;o++)	
+					count_array_WW[bin_of_rp][bin_of_pi][o]+=w1[l]*w1[m]*m1[l][o]*m1[m][o];
+			}
+		}
 	}
-
-	// *********** WRITING RESULTS **************************
-	
-	char wp_jk_name[50];
-	sprintf(wp_jk_name,"results/jackknifes/wpJackknife_jk%d.txt",jkNr+1);
-	FILE *wp_jk_file=fopen(wp_jk_name,"w");
-	
-	// writing results rp, wp of the jackknife sample to wpJackknife<>.txt 
-	for(int i=0;i<bin_rp;i++)	fprintf(wp_jk_file,"%lf\t%lf\n",pow(10,rp_bins[i]),wp_jk[i]);
-	fclose(wp_jk_file);
-	
-	free_2d(DD_jk,bin_rp);
-	free_2d(DR_jk,bin_rp);
-	free_2d(RR_jk,bin_rp);
-	free_2d(DDn_jk,bin_rp);
-	free_2d(DRn_jk,bin_rp);
-	free_2d(RRn_jk,bin_rp);
-	free_2d(xi_jk,bin_rp);
-	
 }
 
-// computeBootstraps() computes CFs for all bootstrap samples using method 1
-void computeBootstraps_meth1(int bootstrapSampleNr, long int n_d, double **ra_bs_full, double **dec_bs_full, double **z_bs_full, double **w_bs_full, long int n_r, double *ra_r, double *dec_r, double *z_r, double *w_r)
+void DR_WR_count_JK(double *ra1,double *dec1,double *z1,double *w1, double **m1,int n1,double *ra2,double *dec2,double *z2, double *w2,int n2,double **count_array_DR,double ***count_array_WR)
 {
-	double **DD=alloc_2d(bin_rp,bin_pi);
-	double **DR=alloc_2d(bin_rp,bin_pi);
-	double **DDn=alloc_2d(bin_rp,bin_pi);
-	double **DRn=alloc_2d(bin_rp,bin_pi);
-	double **RRn=alloc_2d(bin_rp,bin_pi);
-	double **xi=alloc_2d(bin_rp,bin_pi);
-	
-	double *ra_bs = alloc_1d(n_d);
-	double *dec_bs = alloc_1d(n_d);
-	double *z_bs = alloc_1d(n_d);
-	double *w_bs = alloc_1d(n_d);
-
-	for(int i=0;i<n_d;i++)	{
-		ra_bs[i]=ra_bs_full[i][bootstrapSampleNr];
-		dec_bs[i]=dec_bs_full[i][bootstrapSampleNr];
-		z_bs[i]=z_bs_full[i][bootstrapSampleNr];
-		w_bs[i]=w_bs_full[i][bootstrapSampleNr];
-	}
-
-	double ndd=n_d*(n_d-1)*0.5;
-	double nrr=n_r*(n_r-1)*0.5;
-	double ndr=n_d*n_r;
-
-	// ************* COMPUTING WW and WR **************************
-	
-	fprintf(stdout,"\nComputing DD for the bootstrap sample %d\n", bootstrapSampleNr+1);
-	DD_count(ra_bs,dec_bs,z_bs, w_bs,n_d,DD);
-	fprintf(stdout,"\nComputing DR for the bootstrap sample %d\n", bootstrapSampleNr+1);
-	DR_count(ra_bs,dec_bs,z_bs, w_bs,n_d,ra_r,dec_r,z_r, w_r,n_r,DR);
-
-	free_1d(ra_bs);
-	free_1d(dec_bs);
-	free_1d(z_bs);
-	free_1d(w_bs);
-		
-	// ******** COMPUTING XI(RP,PI) AND W(RP,PI) **********************************
-
-	
-
+	double rp,pi;
+	int bin_of_rp, bin_of_pi;
 	for(int j=0;j<bin_rp;j++)	{
 		for(int k=0;k<bin_pi;k++)	{
-			DDn[j][k] = DD[j][k]/ndd;
-			DRn[j][k] = DR[j][k]/ndr;
-			RRn[j][k] = RR[j][k]/nrr;
-				
-			if(RRn==0)	xi[j][k]=0;
-			
-			else	xi[j][k]= (DDn[j][k]-(2*DRn[j][k])+RRn[j][k])/RRn[j][k];
-			
+			count_array_DR[j][k]=0;
+			for(int l=0;l<n_marks;l++)
+				count_array_WR[j][k][l]=0;
 		}
 	}
 
-	// ******** COMPUTING PROJECTED CF BY INTEGRATION *************************
-
-	double wp[bin_rp];
-	for(int j=0;j<bin_rp;j++)	{
-		wp[j]=0;
-		for(int k=0;k<bin_pi;k++)	wp[j]+=(dpi*xi[j][k]);
-		wp[j]*=2;
-	}
-
-	// *********** WRITING RESULTS **************************
-	
-	char wp_bootstrap_name[50];
-	sprintf(wp_bootstrap_name,"results/bootstraps/wpBootstrap_Bs%d.txt",bootstrapSampleNr+1);
-	FILE *wp_bootstrap=fopen(wp_bootstrap_name,"w");
-	
-	// writing results rp, wp of the bootstrap sample to wpBootstrap<>.txt 
-	for(int i=0;i<bin_rp;i++)	fprintf(wp_bootstrap,"%lf\t%lf\n",pow(10,rp_bins[i]),wp[i]);
-	fclose(wp_bootstrap);
-	
-	free_2d(DD,bin_rp);
-	free_2d(DR,bin_rp);
-	free_2d(DDn,bin_rp);
-	free_2d(DRn,bin_rp);
-	free_2d(RRn,bin_rp);
-	free_2d(xi,bin_rp);
-
-}
-
-// computeBootstraps() computes CFs for all bootstrap samples using method 2
-void computeBootstraps_meth2(int bsNr, long int n_d_bs, double *ra_d_bs, double *dec_d_bs, double *z_d_bs, double *w_d_bs, long int n_r_bs, double *ra_r_bs, double *dec_r_bs, double *z_r_bs,double *w_r_bs)
-{
-
-	double **DD_bs=alloc_2d(bin_rp,bin_pi);
-	double **DR_bs=alloc_2d(bin_rp,bin_pi);
-	double **RR_bs=alloc_2d(bin_rp,bin_pi);
-	double **DDn_bs=alloc_2d(bin_rp,bin_pi);
-	double **DRn_bs=alloc_2d(bin_rp,bin_pi);
-	double **RRn_bs=alloc_2d(bin_rp,bin_pi);
-	double **xi_bs=alloc_2d(bin_rp,bin_pi);
-	
-	double ndd_bs=n_d_bs*(n_d_bs-1)*0.5;
-	double nrr_bs=n_r_bs*(n_r_bs-1)*0.5;
-	double ndr_bs=n_d_bs*n_r_bs;
-
-	// ************* COMPUTING WW and WR **************************
-	
-	fprintf(stdout,"\nComputing DD for the bootstrap sample %d\n", bsNr+1);
-	DD_count(ra_d_bs,dec_d_bs,z_d_bs,z_d_bs,n_d_bs,DD_bs);
-	fprintf(stdout,"\nComputing DR for the bootstrap sample %d\n", bsNr+1);
-	DR_count(ra_d_bs,dec_d_bs,z_d_bs,w_d_bs,n_d_bs,ra_r_bs,dec_r_bs,z_r_bs,w_r_bs,n_r_bs,DR_bs);
-	fprintf(stdout,"\nComputing RR for the bootstrap sample %d\n", bsNr+1);
-	RR_count(ra_r_bs,dec_r_bs,z_r_bs,w_r_bs,n_r_bs,RR_bs);
-
-
-	// ******** COMPUTING XI(RP,PI) AND W(RP,PI) **********************************
-
-	
-
-	for(int j=0;j<bin_rp;j++)	{
-		for(int k=0;k<bin_pi;k++)	{
-			DDn_bs[j][k] = DD_bs[j][k]/ndd_bs;
-			DRn_bs[j][k] = DR_bs[j][k]/ndr_bs;
-			RRn_bs[j][k] = RR_bs[j][k]/nrr_bs;
-				
-			if(RRn_bs==0)	xi_bs[j][k]=0;
+	for(int l=0;l<n1;l++)	{
+		for(int m=0;m<n2;m++)	{
+			sep(ra1[l],dec1[l],z1[l],ra2[m],dec2[m],z2[m],&rp,&pi);
+			if(rp < rp_lowcut || rp > rp_highcut || pi > pi_highcut)	continue;
+			rp=log10(rp);
 			
-			else	xi_bs[j][k]= (DDn_bs[j][k]-(2*DRn_bs[j][k])+RRn_bs[j][k])/RRn_bs[j][k];
+			bin_of_rp = (rp-log10(rp_lowcut))/dlrp;
+			bin_of_pi = pi/dpi;
 			
-		}
-	}
+			count_array_DR[bin_of_rp][bin_of_pi]+=w1[l]*w2[m];
+			for(int o=0;o<n_marks;o++)				
+				count_array_WR[bin_of_rp][bin_of_pi][o]+=(w1[l]*w2[m]*m1[l][o]);
+		}	
+	}	
+}			
 
-	// ******** COMPUTING PROJECTED CF BY INTEGRATION *************************
 
-	double wp_bs[bin_rp];
-	for(int j=0;j<bin_rp;j++)	{
-		wp_bs[j]=0;
-		for(int k=0;k<bin_pi;k++)	wp_bs[j]+=(dpi*xi_bs[j][k]);
-		wp_bs[j]*=2;
-	}
-
-	// *********** WRITING RESULTS **************************
-	
-	char wp_bootstrap_name[50];
-	sprintf(wp_bootstrap_name,"results/bootstraps/wpBootstrap_Bs%d.txt",bsNr+1);
-	FILE *wp_bootstrap=fopen(wp_bootstrap_name,"w");
-	
-	// writing results rp, wp of the bootstrap sample to wpBootstrap<>.txt 
-	for(int i=0;i<bin_rp;i++)	fprintf(wp_bootstrap,"%lf\t%lf\n",pow(10,rp_bins[i]),wp_bs[i]);
-	fclose(wp_bootstrap);
-	
-	free_2d(DD_bs,bin_rp);
-	free_2d(DR_bs,bin_rp);
-	free_2d(RR_bs,bin_rp);
-	free_2d(DDn_bs,bin_rp);
-	free_2d(DRn_bs,bin_rp);
-	free_2d(RRn_bs,bin_rp);
-	free_2d(xi_bs,bin_rp);
-}
 
 void computeJKwithoutshuffles(int jkNr, long int n_d_jk, double *ra_d_jk, double *dec_d_jk, double *z_d_jk,double *w_d_jk,double **w_mark_jk, long int n_r_jk, double *ra_r_jk, double *dec_r_jk, double *z_r_jk, double *w_r_jk)
 {
@@ -859,11 +535,6 @@ int main(void)
 	
 	clock_t begin=time(NULL);	// to compute total time taken by code
 	
-	if(n_boots != 0 && n_jacks != 0)	{
-		fprintf(stderr,"\nError! Can't have both bootstrap copies and jackknife copies together..! \n");
-		exit(1);
-	}
-	
 	// ***************************************************************
 	
 	long int n_d;
@@ -903,9 +574,9 @@ int main(void)
 	
 	rp_lowcut=pow(10,rp_bins[0]-dlrp*0.5);
 	rp_highcut=pow(10,rp_bins[bin_rp-1]+dlrp*0.5);
-	pi_highcut=bin_pi+dpi*0.5;
-		
-			
+	pi_highcut=pi_bins[bin_pi-1]+dpi*0.5;
+	
+			printf("%f\t%f\n",rp_lowcut,rp_highcut);
 	// ******** COUNTING THE TOTAL NUMBER OF REAL GALAXIES *************************
 	
 	char buf[255];
@@ -942,7 +613,7 @@ int main(void)
 
 	
 	// ******** READING THE REAL GALAXIES' DATA FILE *************************
-
+	
 	char ch;											 	
 	// ignoring the first header line
 	do											
@@ -1237,141 +908,9 @@ int main(void)
 		}
 	}
 
-	// *************COMPUTING FOR BOOTSTRAP SAMPLES*******************
-	
-	if(boot_meth == 1)	{
-	
-		if(n_boots > 0)	{
-			fprintf(stdout,"\nBootstrap (individual) computation starts here parallely!\n");
-			mkdir("results/bootstraps",0700);
-		
-			
-			double **ra_bs_full = alloc_2d(n_d, n_boots);
-			double **dec_bs_full = alloc_2d(n_d, n_boots);
-			double **z_bs_full = alloc_2d(n_d, n_boots);
-			double **w_bs_full = alloc_2d(n_d, n_boots);
-			
-			// creating bootstrap samples
-			srand((unsigned) time(NULL));
-			long int bs_index;
-			for(int bootstrapSampleNr = 0;bootstrapSampleNr < n_boots;bootstrapSampleNr++)	{
-				for(int i=0;i<n_d;i++)	{
-					bs_index=rand()%(n_d);
-					ra_bs_full[i][bootstrapSampleNr]=ra_d[bs_index];
-					dec_bs_full[i][bootstrapSampleNr]=dec_d[bs_index];
-					z_bs_full[i][bootstrapSampleNr]=z_d[bs_index];
-					w_bs_full[i][bootstrapSampleNr]=w_d[bs_index];
-				}
-			}
-			
-			// executing bootstrap computations parallely
-			#pragma omp parallel for
-			for(int bootstrapSampleNr=0;bootstrapSampleNr<n_boots;bootstrapSampleNr++)	{
-				if(bootstrapSampleNr==0)	fprintf(f_summary,"\nTotal number of parallel threads: %d\n",omp_get_num_threads());
-				computeBootstraps_meth1(bootstrapSampleNr,n_d,ra_bs_full,dec_bs_full,z_bs_full,w_bs_full,n_r, ra_r,dec_r,z_r,w_r);		
-			}
-			
-			free_2d(ra_bs_full,n_d);
-			free_2d(dec_bs_full,n_d);
-			free_2d(z_bs_full,n_d);
-			free_2d(w_bs_full,n_d);
-		}
-	}
-	
-	if(boot_meth == 2)	{
-		if(n_boots > 0)	{
-			
-			fprintf(stdout,"\nBootstrap (blockwise) computation starts here parallely!\n");
-			mkdir("results/bootstraps",0700);
-			
-			#pragma omp parallel for
-			for(int bsNr=0;bsNr<n_boots;bsNr++)	{
-				long int n_d_bs, n_r_bs;
-				double *id_d_bs, *ra_d_bs, *dec_d_bs, *z_d_bs,*w_d_bs, *id_r_bs, *ra_r_bs, *dec_r_bs, *z_r_bs,*w_r_bs;
-				char fileBSReal[100],fileBSRan[100];
-				sprintf(fileBSReal,"bootstrap_data/bs%d_real_galaxies.txt",bsNr+1);
-				FILE *fBSReal = fopen(fileBSReal, "r");
-				if(fBSReal)	{
-					n_d_bs = count_lines(fileBSReal);
-					id_d_bs = alloc_1d(n_d_bs);
-					ra_d_bs = alloc_1d(n_d_bs);
-					dec_d_bs = alloc_1d(n_d_bs);
-					z_d_bs = alloc_1d(n_d_bs);
-					w_d_bs = alloc_1d(n_d_bs);
-					
-					char ch;							 	
-					do	// ignoring the first header line
-						ch = fgetc(fBSReal);			 
-					while (ch != '\n');
-					
-					for(int i=0;i<n_d_bs;i++)	{
-						fscanf(fBSReal,"%lf%lf%lf%lf",&id_d_bs[i],&ra_d_bs[i],&dec_d_bs[i],&z_d_bs[i]);
-						w_d_bs[i]=1.0;
-					}
-					fclose(fBSReal);
-				}
-				else {
-					fprintf(stderr,"\nBootstrap real galaxy %d not found!\n",bsNr+1);
-					exit(1);
-				}
-				
-				sprintf(fileBSRan,"bootstrap_data/bs%d_random_galaxies.txt",bsNr+1);
-				FILE *fBSRan = fopen(fileBSRan, "r");
-				if(fBSRan)	{
-					n_r_bs = count_lines(fileBSRan);
-					id_r_bs = alloc_1d(n_r_bs);
-					ra_r_bs = alloc_1d(n_r_bs);
-					dec_r_bs = alloc_1d(n_r_bs);
-					z_r_bs = alloc_1d(n_r_bs);
-					w_r_bs = alloc_1d(n_r_bs);
-					
-					char ch;							 	
-					do	// ignoring the first header line
-						ch = fgetc(fBSRan);			 
-					while (ch != '\n');
-					
-					for(int i=0;i<n_r_bs;i++)
-						fscanf(fBSRan,"%lf%lf%lf%lf%lf",&id_r_bs[i],&ra_r_bs[i],&dec_r_bs[i],&z_r_bs[i],&w_r_bs[i]);
-					fclose(fBSRan);
-				}
-				else {
-					fprintf(stderr,"\nBootstrap random galaxy %d not found!\n",bsNr+1);
-					exit(1);
-				}
-				
-				fprintf(f_summary,"\nBS %d: N_real: %ld, N_random: %ld\n",bsNr+1,n_d_bs,n_r_bs);
-				
-				computeBootstraps_meth2(bsNr,n_d_bs,ra_d_bs,dec_d_bs,z_d_bs, w_d_bs,n_r_bs, ra_r_bs,dec_r_bs,z_r_bs,w_r_bs);
-
-				free_1d(id_d_bs);
-				free_1d(ra_d_bs);
-				free_1d(dec_d_bs);
-				free_1d(z_d_bs);
-				free_1d(w_d_bs);
-				free_1d(id_r_bs);
-				free_1d(ra_r_bs);
-				free_1d(dec_r_bs);
-				free_1d(z_r_bs);		
-				free_1d(w_r_bs);
-			}
-		}
-	}
-	
-	free_1d(id_d);
-	free_1d(ra_d);
-	free_1d(dec_d);
-	free_1d(z_d);
-	free_1d(w_d);
-	free_2d(prop_2d, n_d);
-	free_1d(id_r);
-	free_1d(ra_r);
-	free_1d(dec_r);
-	free_1d(z_r);
-	free_1d(w_r);
 	
 	free_2d(RR,bin_rp);
 	
-	if(n_boots != 0)	fprintf(f_summary,"\nNumber of bootstrap samples for wp : %d\n",n_boots);
 	if(n_jacks != 0)	fprintf(f_summary,"\nNumber of jackknife samples for wp : %d\n",n_jacks);
 	fprintf(f_summary,"\nNumber of suffles for Mp : %d\n",n_shuffles);
 	
@@ -1387,6 +926,3 @@ int main(void)
 	fclose(f_summary);
 	return 0;
 }	
-
-
-
