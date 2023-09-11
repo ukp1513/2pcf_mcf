@@ -2,15 +2,15 @@
 
 CODE : wp_mp_compute.c
 
-This code computes projected two-point and marked correlation functions of real data and bootstrap (BS)/jackknife (JK) samples. It reads real galaxies from the file _real\_galaxies_ and random galaxies from the file _random\_galaxies_. 
+This code computes projected two-point and marked correlation functions of real data and jackknife (JK) samples. It reads real galaxies from the file _real\_galaxies_ and random galaxies from the file _random\_galaxies_. 
 
-Using random galaxies, it computes RR and saves as _RR.txt_ in the automatically generated directory _biproducts_. If a _RR.txt_ file exists already, that will be used always. The same RR file will be used for all BS samples in case of individual galaxy bootstrapping.  
+Using random galaxies, it computes RR and saves as _RR.txt_ in the automatically generated directory _biproducts_. If a _RR.txt_ file exists already, that will be used always. The same happens for jackknife RR files as well.
 
 Using real galaxies along with their properties, the code computes the MCF along with the 2pCF. The MCF computation for each property is done parallely. The weights of random galaxies given in the input file is made use of. 
 
-Once real data is done, computations of BS/JK are done parallely. In case of blockwise BS and JK method, the real and random BS/JK data files are read from _bootstrap\_data_ and _jackknife\_data_ directories respectively. The BS files should be of name _bs\<bsnr\>\_real\_galaxies_ and _bs\<bsnr\>\_random\_galaxies_. The JK files should be of name _jk\<jknr\>\_real\_galaxies_ and _jk\<jknr\>\_random\_galaxies_.
+Once real data is done, computations of JK are done parallely. The real and random JK data files are read from _jackknife\_data_ directory. The JK files should be of name _jk\<jknr\>\_real\_galaxies_ and _jk\<jknr\>\_random\_galaxies_.
 
-A _result_ directory will be generated with many files. The final result file of interest would be _wpRealAll.txt_, _mpRealAllShuffle\_mk\<nr\>.txt_ and _mpRealAll\_mk\<nr\>.txt_. _wpRealAll.txt_ and _mpRealAll\_mk\<nr\>.txt_ contains CFs in real data and its JK/BS samples.  _mpRealAllShuffle\_mk\<nr\>.txt_ contains MCF of real sample with the 100 shuffles. 
+A _result_ directory will be generated with many files. The final result file of interest would be _wpRealAll.txt_, _mpRealAllShuffle\_mk\<nr\>.txt_ and _mpRealAll\_mk\<nr\>.txt_. _wpRealAll.txt_ and _mpRealAll\_mk\<nr\>.txt_ contains CFs in real data and its JK samples.  _mpRealAllShuffle\_mk\<nr\>.txt_ contains MCF of real sample with the 100 shuffles. 
 
 The formats of all files are given below.
 
@@ -19,23 +19,20 @@ The formats of all files are given below.
 1. Header file: _my\_functions.h_ 
 2. Real data file : _real\_galaxies_ 
 3. Random data file : _random\_galaxies_
-4. If blockwise bootstrap method, directory _bootstrap\_data_ with real and random BS files
-5. If jackknife method, directory _jackknife\_data_ with real and random JK files
-6. List of properties: _propertylist.txt_ . This file should have the headers of property columns in the real data file.
+4. Directory _jackknife\_data_ with real and random JK files
+5. List of properties: _propertylist.txt_ . This file should have the headers of property columns in the real data file.
 
 #### FILE COLUMNS (seperated by tabspace, all input files should have the header):
 
-1. All real and JK/BS real data files: #galaxy\_id, ra, dec, redshift, prop1, prop2, ...
-2. All random and JK/BS random data files : galaxy\_id, ra, dec, redshift, weight 
-3. Result file wpRealAll.txt : rp, wp\_real, wp\_copy1, wp\_copy2, ... #copy: bs/jk
-  Result file mpRealAll_mk\<nr\>.txt : rp, Mp_real, Mp_copy1, Mp_copy2, ... #copy: bs/jk
+1. All real and JK real data files: #galaxy\_id, ra, dec, redshift, prop1, prop2, ...
+2. All random and JK random data files : galaxy\_id, ra, dec, redshift, weight 
+3. Result file wpRealAll.txt : rp, wp\_real, wp\_copy1, wp\_copy2, ... #copy: jk
+  Result file mpRealAll_mk\<nr\>.txt : rp, Mp_real, Mp_copy1, Mp_copy2, ... #copy: jk
 4. Results file mpRealAllShuffle_mk\<nr\>.txt : rp, Mp_real, Mp_shuffle1, Mp_shuffle2, ...
 
 #### PARAMETERS TO BE SET:
  
 - non_prop : Number of columns in real file that are not to be used as marks. These columns should be the first columns.
-- boot_meth : type of bootstrapping (individual or blockwise)
-- n_boots : number of BS samples present in the folder 'bootstrap_data'
 - n_jacks : number of JK samples present in the folder 'jackknife_data' (generates error if both n_boots and n_jacks have non-zero values)
 - n_shuffle : number of times the marks are shuffled to find error in MCF
 - bin_rp : number of bins in rp
