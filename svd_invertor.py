@@ -1,7 +1,5 @@
 # LAST UPDATED : 24 JUNE 2022
 
-#just checking
-
 import os
 import numpy as np
 from numpy.linalg import inv
